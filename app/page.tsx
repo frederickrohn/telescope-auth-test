@@ -1,26 +1,19 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { auth, signIn } from "@/auth";
+import { getUser, signInWithGitHub } from "@/lib/auth";
 
 async function SignInOrContinue() {
-  const session = await auth();
-  if (session?.user) {
+  const user = await getUser();
+  if (user) {
     return (
       <Link href="/dashboard" className="btn">
-        Continue as {session.user.name}
+        Continue as {user.user_metadata.user_name}
       </Link>
     );
   }
   return (
-    <form
-      action={async () => {
-        "use server";
-        await signIn("github", { redirectTo: "/dashboard" });
-      }}
-    >
-      <button type="submit" className="btn">
-        Sign in with GitHub
-      </button>
+    <form action={signInWithGitHub}>
+      <button type="submit" className="btn">Sign in with GitHub</button>
     </form>
   );
 }
@@ -31,7 +24,7 @@ export default function Home() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Telescope Auth Test</h1>
         <p className="mt-2 text-sm text-zinc-500">
-          A throwaway app for checking that GitHub OAuth works through the Telescope preview.
+          A throwaway notes app for checking Supabase GitHub sign-in and CRUD through the Telescope preview.
         </p>
       </div>
       <Suspense fallback={<div className="h-11" />}>
