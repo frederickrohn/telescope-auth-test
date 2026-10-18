@@ -1,31 +1,44 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/auth";
+import { db } from "@/lib/supabase/admin";
 
-// RLS scopes every query to the signed-in user; user_id defaults to auth.uid().
+async function requireUser() {
+  const user = await getUser();
+  if (!user) throw new Error("Not signed in");
+  return user;
+}
+
 export async function createNote(formData: FormData) {
+  const user = await requireUser();
   const body = String(formData.get("body") ?? "").trim();
   if (!body) return;
-  const supabase = await createClient();
-  const { error } = await supabase.from("notes").insert({ body });
+  const { error } = await db().from("authjs_notes").insert({ body, github_id: user.id });
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
 }
 
 export async function updateNote(formData: FormData) {
-  const id = String(formData.get("id"));
+  const user = await requireUser();
   const body = String(formData.get("body") ?? "").trim();
   if (!body) return;
-  const supabase = await createClient();
-  const { error } = await supabase.from("notes").update({ body, updated_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await db()
+    .from("authjs_notes")
+    .update({ body, updated_at: new Date().toISOString() })
+    .eq("id", String(formData.get("id")))
+    .eq("github_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
 }
 
 export async function deleteNote(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("notes").delete().eq("id", String(formData.get("id")));
+  const user = await requireUser();
+  const { error } = await db()
+    .from("authjs_notes")
+    .delete()
+    .eq("id", String(formData.get("id")))
+    .eq("github_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
 }
