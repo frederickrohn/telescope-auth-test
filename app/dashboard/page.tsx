@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getUser, signOut } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { SignOut } from "../auth-buttons";
 import { db } from "@/lib/supabase/admin";
 import { createNote, deleteNote, updateNote } from "./actions";
 
@@ -19,9 +20,7 @@ async function Profile() {
         <p className="font-semibold">{user.name}</p>
         <p className="text-sm text-zinc-500">@{user.login}</p>
       </div>
-      <form action={signOut}>
-        <button type="submit" className="btn btn-secondary w-auto">Sign out</button>
-      </form>
+      <SignOut />
     </div>
   );
 }
@@ -30,9 +29,9 @@ async function Notes() {
   const user = await getUser();
   if (!user) return null;
   const { data, error } = await db()
-    .from("authjs_notes")
+    .from("clerk_notes")
     .select("id, body, updated_at")
-    .eq("github_id", user.id)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   if (error) return <p className="text-sm text-red-600">Couldn&apos;t load notes: {error.message}</p>;
   const notes = (data ?? []) as Note[];

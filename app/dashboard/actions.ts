@@ -14,7 +14,7 @@ export async function createNote(formData: FormData) {
   const user = await requireUser();
   const body = String(formData.get("body") ?? "").trim();
   if (!body) return;
-  const { error } = await db().from("authjs_notes").insert({ body, github_id: user.id });
+  const { error } = await db().from("clerk_notes").insert({ body, user_id: user.id });
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
 }
@@ -24,10 +24,10 @@ export async function updateNote(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   if (!body) return;
   const { error } = await db()
-    .from("authjs_notes")
+    .from("clerk_notes")
     .update({ body, updated_at: new Date().toISOString() })
     .eq("id", String(formData.get("id")))
-    .eq("github_id", user.id);
+    .eq("user_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
 }
@@ -35,10 +35,10 @@ export async function updateNote(formData: FormData) {
 export async function deleteNote(formData: FormData) {
   const user = await requireUser();
   const { error } = await db()
-    .from("authjs_notes")
+    .from("clerk_notes")
     .delete()
     .eq("id", String(formData.get("id")))
-    .eq("github_id", user.id);
+    .eq("user_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
 }
