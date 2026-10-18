@@ -1,5 +1,3 @@
-"use server";
-
 // All auth lives here (plus app/auth/callback) so it can be swapped for Auth.js later.
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -22,6 +20,7 @@ export async function getUser() {
 // Server-side PKCE flow: the server action gets the provider URL from Supabase,
 // then redirect()s the browser to <project>.supabase.co/auth/v1/authorize → github.com.
 export async function signInWithGitHub() {
+  "use server";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "github",
@@ -32,6 +31,7 @@ export async function signInWithGitHub() {
 }
 
 export async function signOut() {
+  "use server";
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
